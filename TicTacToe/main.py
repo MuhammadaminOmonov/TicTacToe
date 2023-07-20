@@ -10,7 +10,7 @@ class Button(QPushButton):
             background-color: #529bb7;
             font-size: 60px;
         """
-        self.setFixedSize(100, 100)
+        self.setFixedSize(135, 135)
         self.setStyleSheet(self.style)
 
     def addStyle(self, st):
@@ -25,9 +25,8 @@ class Window(QWidget):
         self.score_x = 0
         self.score_o = 0
         self.design()
-        self.restart_btn.clicked.connect(self.restart_function)
-
-        
+        self.clear_btn.clicked.connect(self.clear_function)
+        self.new_game_btn.clicked.connect(self.new_game_function)
 
         self.buttons[0][0].clicked.connect(lambda: self.bosildi(0, 0))
         self.buttons[0][1].clicked.connect(lambda: self.bosildi(0, 1))
@@ -41,30 +40,76 @@ class Window(QWidget):
 
         self.show()
 
-    def restart_function(self):
+    def clear_function(self):
         for i in range(len(self.buttons)):
             for k in range(len(self.buttons[i])):
+                self.buttons[i][k].setEnabled(True)
                 self.buttons[i][k].setText("")
+                self.buttons[i][k].setStyleSheet("""
+                    background-color: #529bb7;
+                    font-size: 60px;
+                """)
         self.turn = 0
         self.turn_label.setText("X ni navbati")
+        self.turn_label.setStyleSheet("""
+            color: black;
+            font-size: 20px;
+        """)
+        self.X_score_label.setText("X: "+ str(self.score_x))
+        self.O_score_label.setText("O: "+ str(self.score_o))
+
+    def new_game_function(self):
+        self.clear_function()
         self.score_x = 0
         self.score_o = 0
         self.X_score_label.setText("X: "+ str(self.score_x))
         self.O_score_label.setText("O: "+ str(self.score_o))
 
-    def checked_win_function(self, txt):
+    def checked_win_function(self, btn1, btn2, btn3):
+        if not (btn1.text() == btn2.text() and btn2.text() == btn3.text() and btn3.text() == btn1.text() and btn1.text() != "" and btn2.text() != "" and btn3.text() != ""):
+            return 0
         for i in range(len(self.buttons)):
             for k in range(len(self.buttons[i])):
-                self.buttons[i][k].setText("")
+                if len(self.buttons[i][k].text()) == 0:
+                    self.buttons[i][k].setEnabled(False)
+        btn1.setStyleSheet("""
+            background-color: red;
+            font-size: 60px;
+        """)
+        btn2.setStyleSheet("""
+            background-color: red;
+            font-size: 60px;
+        """)
+        btn3.setStyleSheet("""
+            background-color: red;
+            font-size: 60px;
+        """)
         self.turn = 0
         self.turn_label.setText("X ni navbati")
-        if txt == "X":
+        if btn1.text() == "X":
             self.score_x += 1 
         else: self.score_o += 1
         self.X_score_label.setText("X: "+ str(self.score_x))
         self.O_score_label.setText("O: "+ str(self.score_o))
+        self.turn_label.setText(btn1.text() + "  yutdi!")
+        self.turn_label.setStyleSheet("""
+            color: green;
+            font-size: 30px;
+        """)
 
-
+    def checked_draw_function(self):
+        check = 0
+        for i in range(3):
+            for k in range(3):
+                if len(self.buttons[i][k].text()) == 0:
+                    check += 1
+        if check: return 0
+        self.turn_label.setText("Durrang")
+        self.turn_label.setStyleSheet("""
+            color: green;
+            font-size: 35px;
+        """)
+        
 
 
     def design(self):
@@ -76,7 +121,7 @@ class Window(QWidget):
         """)
 
         self.setWindowTitle("TicTacToe")
-        self.setFixedSize(450, 470)
+        self.setFixedSize(500, 630)
         score_layout = QVBoxLayout()
 
         self.X_score_label = QLabel(self)
@@ -93,11 +138,12 @@ class Window(QWidget):
         self.turn_label = QLabel(self)
         self.turn_label.setText("X ni navbati")
 
+
         header_layout = QHBoxLayout()
         header_layout.addLayout(score_layout)
-        header_layout.addStretch(1)
+        header_layout.addStretch(3)
         header_layout.addWidget(self.turn_label)
-        header_layout.addStretch(2)
+        header_layout.addStretch(5)
 
         self.buttons = list()
         buttons_layout = QVBoxLayout()
@@ -113,14 +159,20 @@ class Window(QWidget):
             self.buttons.append(qator)
             buttons_layout.addStretch()
                 
-        self.restart_btn = Button(self)
-        self.restart_btn.setFixedSize(100, 35)
-        self.restart_btn.setText("restart")
-        self.restart_btn.addStyle("font-size: 18px; bg-color: ")
+        self.clear_btn = Button(self)
+        self.clear_btn.setFixedSize(120, 50)
+        self.clear_btn.setText("Clear")
+        self.clear_btn.addStyle("font-size: 18px; bg-color: ")
+
+        self.new_game_btn = Button(self)
+        self.new_game_btn.setFixedSize(120, 50)
+        self.new_game_btn.setText("New Game")
+        self.new_game_btn.addStyle("font-size: 18px; bg-color: ")
 
         self.restart_layout = QHBoxLayout()
         self.restart_layout.addStretch(20)
-        self.restart_layout.addWidget(self.restart_btn)
+        self.restart_layout.addWidget(self.new_game_btn)
+        self.restart_layout.addWidget(self.clear_btn)
         self.restart_layout.addStretch(25)
 
         self.main_layout.addLayout(header_layout)
@@ -128,7 +180,7 @@ class Window(QWidget):
         self.main_layout.addLayout(self.restart_layout)
 
     def bosildi(self, s: int, q: int):
-        print(self.buttons[s][q].text())
+
         if len(self.buttons[s][q].text()) > 0:
             return 0
         self.buttons[s][q].setText('X' if self.turn % 2 == 0 else 'O')
@@ -136,22 +188,16 @@ class Window(QWidget):
         self.turn += 1
         self.checked(self.buttons)
     def checked(self, buttons):
-        if buttons[0][0].text() == buttons[1][0].text() and buttons[0][0].text() == buttons[2][0].text() and buttons[1][0].text() == buttons[2][0].text() and buttons[0][0].text() != "" and buttons[1][0].text() != "" and buttons[2][0].text() != "":
-            self.checked_win_function(buttons[0][0].text())
-        elif buttons[0][1].text() == buttons[1][1].text() and buttons[0][1].text() == buttons[2][1].text() and buttons[1][1].text() == buttons[2][1].text() and buttons[0][1].text() != "" and buttons[1][1].text() != "" and buttons[2][1].text() != "":
-            self.checked_win_function(buttons[0][1].text())
-        elif buttons[0][2].text() == buttons[1][2].text() and buttons[0][2].text() == buttons[2][2].text() and buttons[1][2].text() == buttons[2][2].text() and buttons[0][2].text() != "" and buttons[1][2].text() != "" and buttons[2][2].text() != "":
-            self.checked_win_function(buttons[0][2].text())
-        elif buttons[0][0].text() == buttons[0][1].text() and buttons[0][1].text() == buttons[0][2].text() and buttons[0][0].text() == buttons[0][2].text() and buttons[0][0].text() != "" and buttons[0][1].text() != "" and buttons[0][2].text() != "":
-            self.checked_win_function(buttons[0][0].text())
-        elif buttons[1][0].text() == buttons[1][1].text() and buttons[1][1].text() == buttons[1][2].text() and buttons[1][0].text() == buttons[1][2].text() and buttons[1][0].text() != "" and buttons[1][1].text() != "" and buttons[1][2].text() != "":
-            self.checked_win_function(buttons[1][0].text())
-        elif buttons[2][0].text() == buttons[2][1].text() and buttons[2][1].text() == buttons[2][2].text() and buttons[2][0].text() == buttons[2][2].text() and buttons[2][0].text() != "" and buttons[2][1].text() != "" and buttons[2][2].text() != "":
-            self.checked_win_function(buttons[2][0].text())
-        elif buttons[0][0].text() == buttons[1][1].text() and buttons[1][1].text() == buttons[2][2].text() and buttons[0][0].text() == buttons[2][2].text() and buttons[0][0].text() != "" and buttons[1][1].text() != "" and buttons[2][2].text() != "":
-            self.checked_win_function(buttons[0][0].text())
-        elif buttons[0][2].text() == buttons[1][1].text() and buttons[1][1].text() == buttons[2][0].text() and buttons[2][0].text() == buttons[0][2].text() and buttons[0][2].text() != "" and buttons[1][1].text() != "" and buttons[2][0].text() != "":
-            self.checked_win_function(buttons[0][2].text())
+            self.checked_win_function(buttons[0][0], buttons[1][0], buttons[2][0])
+            self.checked_win_function(buttons[0][1], buttons[1][1], buttons[2][1])
+            self.checked_win_function(buttons[0][2], buttons[1][2], buttons[2][2])        
+            self.checked_win_function(buttons[0][0], buttons[0][1], buttons[0][2])
+            self.checked_win_function(buttons[1][0], buttons[1][1], buttons[1][2])
+            self.checked_win_function(buttons[2][0], buttons[2][1], buttons[2][2])
+            self.checked_win_function(buttons[0][0], buttons[1][1], buttons[2][2])
+            self.checked_win_function(buttons[0][2], buttons[1][1], buttons[2][0])
+            self.checked_draw_function()
+            
         
 
 app = QApplication([])
